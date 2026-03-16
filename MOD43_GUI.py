@@ -135,6 +135,11 @@ class MOD43_GUI:
         self.result_value_var = tk.StringVar()
         ttk.Entry(result_frame, textvariable=self.result_value_var, width=10, state="readonly").pack(side=tk.LEFT, padx=5)
         
+        # 显示字符串长度
+        ttk.Label(result_frame, text="字符串长度：").pack(side=tk.LEFT, padx=5)
+        self.string_length_var = tk.StringVar(value="0")
+        ttk.Entry(result_frame, textvariable=self.string_length_var, width=10, state="readonly").pack(side=tk.LEFT, padx=5)
+        
         # 4. MOD43 字符映射表
         mapping_frame = ttk.LabelFrame(self.root, text="MOD43 字符映射表")
         mapping_frame.pack(fill=tk.X, padx=10, pady=5)
@@ -213,6 +218,9 @@ class MOD43_GUI:
     def calculate(self):
         """计算 MOD43 校验位"""
         input_str = self.input_var.get().strip()
+        # 显示当前输入字符串长度
+        self.string_length_var.set(str(len(input_str)))
+        
         if not input_str:
             self.center_messagebox("错误", "请输入字符串", 'error')
             return
@@ -250,6 +258,9 @@ class MOD43_GUI:
             
             # 显示对应的MOD32数值
             self.result_value_var.set(str(remainder))
+            
+            # 显示字符串长度
+            self.string_length_var.set(str(len(input_str)))
             
             # 保存计算结果的余数，用于高亮显示
             self.result_remainder = remainder
