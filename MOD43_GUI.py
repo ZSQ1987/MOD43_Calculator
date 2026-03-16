@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from datetime import datetime
 import os
+import configparser
 
 # 尝试导入openpyxl库
 try:
@@ -44,8 +45,54 @@ class MOD43_GUI:
         # 设置窗口位置和大小
         self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
         
+        # 设置图标
+        self._set_window_icon()
+        
+        # 初始化配置文件路径
+        self.config_file = os.path.join(os.getcwd(), "config.ini")
+        # 读取配置
+        self.string_length = self._load_config()
         # 初始化 GUI
         self._init_gui()
+    
+    def _set_window_icon(self):
+        """设置窗口图标"""
+        # 尝试设置图标
+        import sys
+        # 确定图标路径
+        if getattr(sys, 'frozen', False):
+            # 打包后的环境
+            icon_path = os.path.join(sys._MEIPASS, "app_ico.ico")
+        else:
+            # 开发环境
+            icon_path = os.path.join(os.getcwd(), "app_ico.ico")
+        
+        if os.path.exists(icon_path):
+            try:
+                self.root.iconbitmap(icon_path)
+            except Exception as e:
+                # 图标设置失败，静默处理
+                pass
+    
+    def _load_config(self):
+        """从配置文件加载配置"""
+        config = configparser.ConfigParser()
+        if os.path.exists(self.config_file):
+            config.read(self.config_file)
+            if "Settings" in config and "string_length" in config["Settings"]:
+                try:
+                    return int(config["Settings"]["string_length"])
+                except (ValueError, TypeError):
+                    pass
+        # 默认值
+        return 14
+    
+    def _save_config(self, length):
+        """保存配置到配置文件"""
+        config = configparser.ConfigParser()
+        config["Settings"] = {"string_length": str(length)}
+        with open(self.config_file, "w") as f:
+            config.write(f)
     
     def _init_gui(self):
         """初始化 TTK 界面组件"""
@@ -73,6 +120,7 @@ class MOD43_GUI:
         
         ttk.Button(input_frame, text="计算", command=self.calculate).pack(side=tk.LEFT, padx=5)
         ttk.Button(input_frame, text="导出Excel", command=self.export_to_excel).pack(side=tk.LEFT, padx=5)
+        ttk.Button(input_frame, text="配置", command=self.show_config).pack(side=tk.LEFT, padx=5)
         
         # 3. 结果显示区域
         result_frame = ttk.Frame(self.root)
@@ -166,12 +214,12 @@ class MOD43_GUI:
         """计算 MOD43 校验位"""
         input_str = self.input_var.get().strip()
         if not input_str:
-            self.result_var.set("请输入字符串")
+            self.center_messagebox("错误", "请输入字符串", 'error')
             return
         
-        # 强制校验14个字符串
-        if len(input_str) != 14:
-            self.result_var.set("错误：请输入14位字符串")
+        # 强制校验配置的字符串长度
+        if len(input_str) != self.string_length:
+            self.center_messagebox("错误", f"请输入{self.string_length}位字符串", 'error')
             return
         
         try:
@@ -228,7 +276,79 @@ class MOD43_GUI:
             self.highlight_result_in_tree()
             
         except ValueError as e:
-            self.result_var.set(f"错误：{str(e)}")
+            self.center_messagebox("错误", str(e), 'error')
+    
+    def show_config(self):
+        """显示配置弹窗，允许用户输入字符串长度"""
+        # 创建配置窗口
+        config_window = tk.Toplevel(self.root)
+        config_window.title("配置")
+        config_window.transient(self.root)  # 设置为主窗口的临时窗口
+        config_window.grab_set()  # 模态窗口
+        
+        # 设置窗口大小
+        window_width = 300
+        window_height = 150
+        
+        # 计算居中位置
+        screen_width = config_window.winfo_screenwidth()
+        screen_height = config_window.winfo_screenheight()
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        
+        # 设置窗口位置
+        config_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        
+        # 创建框架
+        frame = ttk.Frame(config_window, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+        
+        # 添加标签和输入框
+        ttk.Label(frame, text="字符串长度：").grid(row=0, column=0, padx=10, pady=10, sticky=tk.E)
+        
+        # 创建字符串变量，用于存储输入的长度
+        length_var = tk.StringVar(value=str(self.string_length))
+        length_entry = ttk.Entry(frame, textvariable=length_var, width=10)
+        length_entry.grid(row=0, column=1, padx=10, pady=10, sticky=tk.W)
+        
+        # 添加点击事件，清空默认值
+        def on_entry_click(event):
+            if length_var.get() == str(self.string_length):
+                length_var.set("")
+        
+        length_entry.bind('<Button-1>', on_entry_click)
+        
+        # 聚焦到输入框
+        length_entry.focus()
+        
+        # 确定按钮回调
+        def on_ok():
+            try:
+                # 尝试将输入转换为整数
+                new_length = int(length_var.get())
+                if new_length > 0:
+                    # 更新字符串长度配置
+                    self.string_length = new_length
+                    # 保存配置到文件
+                    self._save_config(new_length)
+                    config_window.destroy()
+                else:
+                    # 显示错误消息
+                    self.center_messagebox("错误", "字符串长度必须大于0", 'error')
+            except ValueError:
+                # 显示错误消息
+                self.center_messagebox("错误", "请输入有效的整数", 'error')
+        
+        # 取消按钮回调
+        def on_cancel():
+            config_window.destroy()
+        
+        # 添加按钮
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=1, column=0, columnspan=2, pady=20)
+        
+        ttk.Button(button_frame, text="确定", command=on_ok, width=10).pack(side=tk.LEFT, padx=10)
+        ttk.Button(button_frame, text="取消", command=on_cancel, width=10).pack(side=tk.LEFT, padx=10)
     
     def highlight_result_in_tree(self):
         """在字符映射表中高亮显示计算结果对应的数值和字符"""

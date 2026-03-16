@@ -45,7 +45,7 @@ $pyinstaller_path = "$PWD\$venvPath\Scripts\pyinstaller.exe"
 Write-Host "Executing PyInstaller..." -ForegroundColor Yellow
 
 # Use direct command line
-$command = "`"$pyinstaller_path`" --noconfirm --onefile --windowed --name=MOD43_GUI --version-file=version_info.txt --upx-dir=`"$upxPath`" --upx-exclude=vcruntime140.dll --optimize=2 MOD43_GUI.py"
+$command = "`"$pyinstaller_path`" --noconfirm --onefile --windowed --name=MOD43_GUI --icon=app_ico.ico --version-file=version_info.txt --add-data=app_ico.ico;. --upx-dir=`"$upxPath`" --upx-exclude=vcruntime140.dll --optimize=2 MOD43_GUI.py"
 
 # Execute command
 cmd /c $command
