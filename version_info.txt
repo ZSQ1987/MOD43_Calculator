@@ -1,0 +1,30 @@
+# UTF-8
+#
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,  # NT32
+    fileType=0x1,  # APP
+    subtype=0x0,  # 0=none
+    date=(0, 0)
+    ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        u'040904B0',
+        [StringStruct(u'CompanyName', u'MOD43 Calculator'),
+        StringStruct(u'FileDescription', u'MOD43 Check Digit Calculator'),
+        StringStruct(u'FileVersion', u'1.0.0.0'),
+        StringStruct(u'InternalName', u'MOD43_GUI'),
+        StringStruct(u'LegalCopyright', u'Copyright (c) 2026'),
+        StringStruct(u'OriginalFilename', u'MOD43_GUI.exe'),
+        StringStruct(u'ProductName', u'MOD43 Calculator'),
+        StringStruct(u'ProductVersion', u'1.0.0.0')])
+      ]),
+    VarFileInfo([VarStruct(u'Translation', [1033, 1252])])
+  ]
+)
